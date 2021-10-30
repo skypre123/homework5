@@ -16,12 +16,16 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.homework5.databinding.ActivityMainBinding;
 
+import java.io.ByteArrayOutputStream;
+
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
+    Bitmap bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,15 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("EXTRA_NAME", name);
         String message = binding.editContent.getText().toString();
         intent.putExtra("EXTRA_MESSAGE", message);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        float scale = (float) (2014/(float)bitmap.getWidth());
+        int image_w = (int) (bitmap.getWidth()*scale);
+        int image_h = (int) (bitmap.getHeight()*scale);
+        Bitmap resize = Bitmap.createScaledBitmap(bitmap, image_w, image_h, true);
+        resize.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        intent.putExtra("EXTRA_IMAGE", byteArray);
         startActivity(intent);
     }
 
@@ -50,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         resultLauncher.launch(intent);
-        binding.image.setVisibility(View.VISIBLE);
     }
 
     private ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -67,8 +79,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (result.getResultCode() == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-            Bitmap bitmap = loadBitmap(selectedImage);
+            bitmap = loadBitmap(selectedImage);
             binding.image.setImageBitmap(bitmap);
+            binding.image.setVisibility(View.VISIBLE);
         }
     });
     private Bitmap loadBitmap(Uri uri) {
